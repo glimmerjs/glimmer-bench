@@ -16,4 +16,17 @@ app.registerInitializer({
 
 app.renderComponent('glimmer-bench', containerElement, null);
 
-app.boot();
+requestAnimationFrame(() => {
+  performance.mark('beforeRender');
+  app.boot();
+  performance.mark('afterRender');
+  requestAnimationFrame(() => {
+    performance.mark('afterPaint');
+
+    setTimeout(() => {
+      if (location.search === '?perf.tracing') {
+        document.location.href = 'about:blank';
+      }
+    }, 100);
+  });
+});

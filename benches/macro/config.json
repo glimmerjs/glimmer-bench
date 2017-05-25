@@ -1,23 +1,24 @@
-const DEFAULT_OPTIONS = {
+{
   "cpu": 4,
+  "har": "./benches/macro/archive.har",
   "runtimeStats": false,
   "network": {
     "latency": 400,
     "uploadThroughput": 51200,
     "downloadThroughput": 51200,
     "offline": false
-  }
-}
-
-module.exports = function(options) {
-  let servers = options.servers;
-  return Object.assign({}, DEFAULT_OPTIONS, options, {
-    "servers": [{
+  },
+  "servers": [
+    {
       "name": "baseline",
       "port": 8879,
       "dist": "baseline-dist"
-    }, ...servers]
-  })
+    },
+    {
+      "name": "experiment",
+      "port": 8880,
+      "dist": "dist"
+    }
+  ]
 }
-
 

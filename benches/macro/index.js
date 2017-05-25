@@ -3,11 +3,16 @@ const Runner = ChromeTracing.Runner;
 const InitialRenderBenchmark = ChromeTracing.InitialRenderBenchmark;
 const fs = require('fs');
 const mkdirp = require('mkdirp').sync;
+const mannWhitney = require('mann-whitney-utest');
+const { collectCallStats, collectPhases, stats, gcStats } = require('../lib/collect');
+const boxPlot = require('ascii-boxplot');
+const { green, yellow, magenta } = require('chalk');
+
 let browserOpts = {
   type: "canary"
 };
 
-const config = JSON.parse(fs.readFileSync("./benching/config.json", "utf8"));
+const config = JSON.parse(fs.readFileSync("./benches/macro/config.json", "utf8"));
 
 const LIGHTHOUSE_NETWORK_CONDTIONS = {
   latency: 150, // 150ms
@@ -16,72 +21,99 @@ const LIGHTHOUSE_NETWORK_CONDTIONS = {
   offline: false
 };
 
+const markers = [
+  { start: "domLoading", label: "load" },
+  { start: "beforeRender", label: "render" }
+]
+
 const LIGHTHOUSE_CPU_THROTTLE = 4.5;
 
-let benchmarks = config.servers.map(({ name, port }) => new InitialRenderBenchmark({
-  name,
-  url: `http://localhost:${port}/?perf.tracing`,
-  markers: [
-    { start: "domLoading", label: "load" },
-    { start: "beforeRender", label: "render" }
-  ],
-  cpuThrottleRate: config.cpu || LIGHTHOUSE_CPU_THROTTLE,
-  runtimeStats: config.runtimeStats || false,
-  networkConditions: config.network || LIGHTHOUSE_NETWORK_CONDTIONS,
-  browser: browserOpts
-}));
+function emerging() {
+  console.log(magenta('Running Emerging Markets:\n'))
 
-let runner = new Runner(benchmarks);
+  let emergingMarkets = config.servers.map(({ name, port }) => new InitialRenderBenchmark({
+    name,
+    url: `http://localhost:${port}/?perf.tracing`,
+    markers,
+    cpuThrottleRate: 10,
+    runtimeStats: false,
+    networkConditions: {
+      "latency": 400,
+      "uploadThroughput": 51200,
+      "downloadThroughput": 51200,
+      "offline": false
+    },
+    browser: browserOpts
+  }));
 
-runner.run(50).then((results) => {
-  let samplesCSV = `set,ms,type\n`;
-  let gcCSV = `set,heap,type\n`;
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      samplesCSV += `${set},${(sample.compile / 1000)},compile\n`;
-      samplesCSV += `${set},${(sample.run / 1000)},run\n`;
-      samplesCSV += `${set},${(sample.js / 1000)},js\n`;
-      samplesCSV += `${set},${(sample.gc / 1000)},gc\n`;
-      samplesCSV += `${set},${(sample.callFunction / 1000)},callFunction\n`;
-      samplesCSV += `${set},${(sample.parseOnBackground / 1000)},parseOnBackground\n`;
-      samplesCSV += `${set},${(sample.duration / 1000)},duration\n`;
-      sample.gcSamples.forEach(sample => {
-        gcCSV += `${set},${(sample.usedHeapSizeBefore / 1000)},before\n`;
-        gcCSV += `${set},${(sample.usedHeapSizeAfter / 1000)},after\n`;
-      });
-    });
+  let emergingMarketsRunner = new Runner(emergingMarkets);
+
+  return emergingMarketsRunner.run(30).then(produceStats).catch((err) => {
+    console.error(err.stack);
+    process.exit(1);
   });
-  let phasesCSV = "set,phase,ms,type\n";
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      sample.phaseSamples.forEach(phaseSample => {
-        phasesCSV += `${set},${phaseSample.phase},${(phaseSample.self / 1000)},self\n`;
-        phasesCSV += `${set},${phaseSample.phase},${(phaseSample.cumulative / 1000)},cumulative\n`;
-      });
-    });
+}
+
+function produceStats(results) {
+  let callStatResults = collectCallStats(results);
+  let [ selfResults, cumulativeResults ] = collectPhases(results);
+
+  [...stats, ...gcStats].forEach(stat => {
+    significance(callStatResults.get(stat), stat);
   });
-  let today = new Date();
-  let dd = today.getDate();
-  let mm = today.getMonth() + 1;
-  let yyyy = today.getFullYear();
 
-  if(dd < 10){
-    dd = `0${dd}`;
+  ['load', 'render'].forEach(phase => {
+    console.log('Self');
+    significance(selfResults.get(phase), phase);
+    console.log('Cumulative');
+    significance(cumulativeResults.get(phase), phase);
+  });
+}
+
+function established() {
+  console.log(magenta('Running Established Markets:\n'))
+  let establishedMarkets = config.servers.map(({ name, port }) => new InitialRenderBenchmark({
+    name,
+    url: `http://localhost:${port}/?perf.tracing`,
+    markers,
+    cpuThrottleRate: LIGHTHOUSE_CPU_THROTTLE,
+    runtimeStats: false,
+    networkConditions: LIGHTHOUSE_NETWORK_CONDTIONS,
+    browser: browserOpts
+  }));
+
+  let establishedMarketsRunner = new Runner(establishedMarkets);
+
+  return establishedMarketsRunner.run(30).then(produceStats).catch((err) => {
+    console.error(err.stack);
+    process.exit(1);
+  });
+}
+
+function significance(pairs, type) {
+  let keys = pairs.keys;
+  let samples = pairs.values;
+  let u = mannWhitney.test(samples);
+
+  if (mannWhitney.significant(u, samples)) {
+    console.log(green(`Significant U Value For ${type}: [${u}]\n`))
+  } else {
+    console.log(yellow(`Insignificant U Value For ${type}: [${u}]\n`));
   }
-  if(mm < 10){
-    mm =`0${mm}`;
-  }
 
-  let folder = `./benching/results-${yyyy}-${mm}-${dd}`;
+  let args = {};
 
-  mkdirp(folder);
-  fs.writeFileSync(`${folder}/samples.csv`, samplesCSV);
-  fs.writeFileSync(`${folder}/gc.csv`, gcCSV);
-  fs.writeFileSync(`${folder}/phases.csv`, phasesCSV);
-  fs.writeFileSync(`${folder}/results.json`, JSON.stringify(results, null, 2));
-}).catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
+  keys.forEach((key, i) => args[key] = samples[i].sort((a, b) => a - b));
+
+  console.log(`${type} ${keys.join(' vs. ')}\n`);
+  boxPlot(args, { cols: 50 });
+  console.log(`\n`);
+}
+
+module.exports = async function trace() {
+  await established()
+  return await emerging().then(() => {
+    process.exit();
+  });
+}
+
