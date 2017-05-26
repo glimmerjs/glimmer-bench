@@ -34,6 +34,10 @@ function unlink() {
   return cmd(`yarn unlink ${GLIMMER_PACKAGES.join(' ')}`);
 }
 
+function yarn() {
+  return cmd(`yarn`);
+}
+
 function logger(message) {
   logger = ora(message).start();
   return (message, color = 'cyan', done) => {
@@ -58,6 +62,7 @@ async function run() {
 
   if (argv.link) {
     await unlink();
+    await yarn();
   }
 
   await build();
