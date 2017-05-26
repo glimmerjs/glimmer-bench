@@ -12,7 +12,7 @@ We use a the 3G Emerging Markets (400KBPS, 400MS RTT) as indicated on [WebPageTe
 The basic usage is to compare master (used as a baseline) and a linked version of the Glimmer VM.
 
 ```
-yarn run bench --link
+yarn run link:bench
 ```
 
 This will first build master, move it to `baseline-dist`, link the VM packages, then build the experiment. Once it has built the 2 apps it will run the benchmarks.
