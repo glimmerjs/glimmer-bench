@@ -26,6 +26,8 @@ requestAnimationFrame(() => {
     setTimeout(() => {
       if (location.search === '?perf.tracing') {
         document.location.href = 'about:blank';
+      } else {
+        performance.measure('render', 'beforeRender', 'afterRender');
       }
     }, 100);
   });

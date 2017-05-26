@@ -7,6 +7,7 @@ const mannWhitney = require('mann-whitney-utest');
 const { collectCallStats, collectPhases, stats, gcStats } = require('../lib/collect');
 const boxPlot = require('ascii-boxplot');
 const { green, yellow, magenta } = require('chalk');
+const { mean, median, mode } = require('simple-statistics');
 
 let browserOpts = {
   type: "canary"
@@ -107,6 +108,12 @@ function significance(pairs, type) {
 
   console.log(`${type} ${keys.join(' vs. ')}\n`);
   boxPlot(args, { cols: 50 });
+
+  Object.keys(args).forEach((key) => {
+    let results = args[key];
+    console.log(`${key}: Mean: %d Median: %d Mode: %d`, mean(results), median(results), mode(results));
+  });
+
   console.log(`\n`);
 }
 

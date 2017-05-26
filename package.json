@@ -38,6 +38,7 @@
     "har-remix": "^1.2.0",
     "mann-whitney-utest": "^1.0.5",
     "minimist": "^1.2.0",
-    "ora": "^1.2.0"
+    "ora": "^1.2.0",
+    "simple-statistics": "^4.1.0"
   }
 }
