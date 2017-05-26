@@ -7,6 +7,7 @@
     "test": "tests"
   },
   "scripts": {
+    "start": "ember serve",
     "link:bench": "node ./benches/macro/runner.js --link",
     "ci:bench": "node ./benches/macro/runner.js --ci"
   },
