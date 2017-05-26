@@ -4,7 +4,7 @@ const ora = require('ora');
 const trace = require('./index');
 const startServer = require('./server');
 const argv = require('minimist')(process.argv.slice(2));
-const GLIMMER_PACKAGES = ['runtime', 'reference', 'object-reference', 'runtime', 'util'].map(pkg => `@glimmer/${pkg}`);
+const GLIMMER_PACKAGES = ['runtime', 'reference', 'object-reference', 'runtime', 'util', 'compiler', 'wire-format', 'syntax'].map(pkg => `@glimmer/${pkg}`);
 
 function cmd(instructions) {
   return execa.shell(`${instructions}`).then((r) => r.stdout, (r) => r.stderr);
