@@ -56,7 +56,9 @@ async function run() {
   const COMMIT_BRANCH = await git('symbolic-ref --short HEAD');
   let log = logger(`Checking out master@${MASTER_HEAD}`);
 
-  await git(`checkout ${MASTER_HEAD}`);
+  if (argv.ci) {
+    await git(`checkout ${MASTER_HEAD}`);
+  }
 
   log(`Building master@${MASTER_HEAD}`);
 
@@ -93,6 +95,10 @@ async function run() {
     return await trace();
   } else {
     await trace();
+  }
+
+  if (argv.link) {
+    return Promise.resolve();
   }
 
   return await git(`checkout ${COMMIT_BRANCH}`);
