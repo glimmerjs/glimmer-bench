@@ -49,7 +49,7 @@ function emerging() {
 
   let emergingMarketsRunner = new Runner(emergingMarkets);
 
-  return emergingMarketsRunner.run(30).then(produceStats).catch((err) => {
+  return emergingMarketsRunner.run(50).then(produceStats).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });
@@ -85,7 +85,7 @@ function established() {
 
   let establishedMarketsRunner = new Runner(establishedMarkets);
 
-  return establishedMarketsRunner.run(30).then(produceStats).catch((err) => {
+  return establishedMarketsRunner.run(50).then(produceStats).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });
