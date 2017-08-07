@@ -14,21 +14,29 @@ app.registerInitializer({
   }
 });
 
+performance.mark('beforeRender');
 app.renderComponent('glimmer-bench', containerElement, null);
 
-requestAnimationFrame(() => {
-  performance.mark('beforeRender');
-  app.boot();
-  performance.mark('afterRender');
+app.boot();
+
+
   requestAnimationFrame(() => {
-    performance.mark('afterPaint');
+
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+         performance.mark('afterPaint');
+        });
+      })
+    })
 
     setTimeout(() => {
       if (location.search === '?perf.tracing') {
         document.location.href = 'about:blank';
       } else {
-        performance.measure('render', 'beforeRender', 'afterRender');
+
+        performance.measure('render', 'beforeRender', 'afterPaint');
       }
     }, 100);
   });
-});
