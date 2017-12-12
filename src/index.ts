@@ -16,4 +16,8 @@ app.registerInitializer({
 
 app.renderComponent('GlimmerBench', containerElement, null);
 
+performance.mark('beforeRender');
+
 app.boot();
+
+performance.mark('afterRender');

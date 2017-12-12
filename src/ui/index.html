@@ -7,6 +7,29 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <script>
+const observer = new PerformanceObserver(function(list, obj) {
+  const entries = list.getEntries();
+  for (let i=0; i < entries.length; i++) {
+    if (entries[i].entryType === 'mark' && entries[i].name === 'didUpdate') {
+      if (location.search === '?perf.tracing') {
+        setTimeout(() => {
+          document.location.href = 'about:blank';
+        }, 10);
+      } else {
+        performance.mark('processEnd');
+        performance.measure('load', 'navigationStart', 'beforeRender');
+        performance.measure('render', 'beforeRender', 'afterRender');
+        performance.measure('fetch', 'afterRender', 'didFetch');
+        performance.measure('update', 'didFetch', 'didUpdate');
+        performance.measure('paint', 'didUpdate', 'processEnd');
+      }
+    }
+  }
+});
+observer.observe({entryTypes: ["mark"]});
+    </script>
+
     {{content-for "head"}}
 
     <link rel="stylesheet" href="{{rootURL}}app.css">

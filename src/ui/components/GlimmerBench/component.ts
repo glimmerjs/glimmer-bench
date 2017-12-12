@@ -9,7 +9,12 @@ export default class GlimmerBench extends Component {
   constructor(injections) {
     super(injections);
     window['fetch']('/api/top').then((result) => result.json()).then((data) => {
+      performance.mark('didFetch');
       this.results = data.data;
     });
+  }
+
+  didUpdate() {
+    performance.mark('didUpdate');
   }
 }

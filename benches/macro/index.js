@@ -23,9 +23,15 @@ const LIGHTHOUSE_NETWORK_CONDTIONS = {
 };
 
 const markers = [
-  { start: "domLoading", label: "load" },
-  { start: "beforeRender", label: "render" }
+  { start: "navigationStart", label: "load" },
+  { start: "beforeRender", label: "render" },
+  { start: "afterRender", label: "fetch" },
+  { start: "didFetch", label: "update" },
+  { start: "didUpdate", label: "after" },
 ]
+
+const phases = markers.map(mark => mark.label);
+phases.push('paint');
 
 const LIGHTHOUSE_CPU_THROTTLE = 4.5;
 
@@ -63,7 +69,7 @@ function produceStats(results) {
     significance(callStatResults.get(stat), stat);
   });
 
-  ['load', 'render'].forEach(phase => {
+  phases.forEach(phase => {
     console.log('Self');
     significance(selfResults.get(phase), phase);
     console.log('Cumulative');
@@ -123,4 +129,3 @@ module.exports = async function trace() {
     process.exit();
   });
 }
-
