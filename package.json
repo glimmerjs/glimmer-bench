@@ -12,10 +12,10 @@
     "ci:bench": "node ./benches/macro/runner.js --ci"
   },
   "devDependencies": {
-    "@glimmer/application": "^0.8.0",
+    "@glimmer/application": "^0.9.0-alpha.13",
     "@glimmer/application-pipeline": "^0.10.0",
     "@glimmer/blueprint": "^0.6.4",
-    "@glimmer/component": "^0.8.0",
+    "@glimmer/component": "^0.9.0-alpha.13",
     "@glimmer/resolver": "^0.4.1",
     "babel-plugin-glimmer-inline-precompile": "^1.2.0",
     "broccoli-asset-rev": "^2.5.0",
