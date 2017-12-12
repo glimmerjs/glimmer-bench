@@ -9,6 +9,8 @@ const boxPlot = require('ascii-boxplot');
 const { green, yellow, magenta } = require('chalk');
 const { mean, median, mode } = require('simple-statistics');
 
+const ITERATIONS = 50;
+
 let browserOpts = {
   type: "canary"
 };
@@ -27,11 +29,10 @@ const markers = [
   { start: "beforeRender", label: "render" },
   { start: "afterRender", label: "fetch" },
   { start: "didFetch", label: "update" },
-  { start: "didUpdate", label: "after" },
+  { start: "didUpdate", label: "paint" },
 ]
 
 const phases = markers.map(mark => mark.label);
-phases.push('paint');
 
 const LIGHTHOUSE_CPU_THROTTLE = 4.5;
 
@@ -55,7 +56,7 @@ function emerging() {
 
   let emergingMarketsRunner = new Runner(emergingMarkets);
 
-  return emergingMarketsRunner.run(50).then(produceStats).catch((err) => {
+  return emergingMarketsRunner.run(ITERATIONS).then(produceStats).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });
@@ -91,7 +92,7 @@ function established() {
 
   let establishedMarketsRunner = new Runner(establishedMarkets);
 
-  return establishedMarketsRunner.run(50).then(produceStats).catch((err) => {
+  return establishedMarketsRunner.run(ITERATIONS).then(produceStats).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });

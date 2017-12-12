@@ -28,10 +28,8 @@ class Collector {
   }
 }
 
-
-const stats = module.exports.stats = ['compile', 'run', 'js', 'gc', 'callFunction', 'parseOnBackground', 'duration'];
+const stats = module.exports.stats = ['js', 'duration'];
 const gcStats = module.exports.gcStats = ['usedHeapSizeBefore', 'usedHeapSizeAfter'];
-
 
 module.exports.collectCallStats = (raw) => {
   let collector = new Collector();
@@ -40,11 +38,12 @@ module.exports.collectCallStats = (raw) => {
     let set = result.set;
 
     result.samples.forEach(sample => {
+
       stats.forEach((stat) => {
         collector.push(set, stat, (sample[stat] / 1000));
       });
 
-      sample.gcSamples.forEach(sample => {
+      sample.gc.forEach(sample => {
         gcStats.forEach(stat => {
           collector.push(set, stat, (sample[stat] / 1000));
         });
@@ -63,13 +62,14 @@ module.exports.collectPhases = (raw) => {
     let set = result.set;
 
     result.samples.forEach(sample => {
-      sample.phaseSamples.forEach(phaseSample => {
-        cumulativeCollector.push(set, phaseSample.phase, (phaseSample.cumulative / 1000));
-        selfCollector.push(set, phaseSample.phase, (phaseSample.self / 1000));
+      sample.phases.forEach(phaseSample => {
+        cumulativeCollector.push(set, phaseSample.phase,
+          ((phaseSample.start + phaseSample.duration) / 1000));
+        selfCollector.push(set, phaseSample.phase,
+          (phaseSample.duration / 1000));
       });
     });
   });
-
 
   return [selfCollector, cumulativeCollector];
 }
