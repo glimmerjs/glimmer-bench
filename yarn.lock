@@ -63,6 +63,19 @@
   dependencies:
     ember-cli-string-utils "^1.1.0"
 
+"@glimmer/bundle-compiler@^0.30.3":
+  version "0.30.3"
+  resolved "https://registry.yarnpkg.com/@glimmer/bundle-compiler/-/bundle-compiler-0.30.3.tgz#39a92d4e2ed4ecd7d9dc36b3a441c6318c3a8eee"
+  dependencies:
+    "@glimmer/compiler" "^0.30.3"
+    "@glimmer/interfaces" "^0.30.3"
+    "@glimmer/opcode-compiler" "^0.30.3"
+    "@glimmer/program" "^0.30.3"
+    "@glimmer/syntax" "^0.30.3"
+    "@glimmer/util" "^0.30.3"
+    "@glimmer/wire-format" "^0.30.3"
+    simple-html-tokenizer "^0.4.1"
+
 "@glimmer/compiler@^0.30.3":
   version "0.30.3"
   resolved "https://registry.yarnpkg.com/@glimmer/compiler/-/compiler-0.30.3.tgz#9fc27ebfbce66b1142084b876326ee0f1793649e"
@@ -98,6 +111,12 @@
 "@glimmer/env@^0.1.7":
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/@glimmer/env/-/env-0.1.7.tgz#fd2d2b55a9029c6b37a6c935e8c8871ae70dfa07"
+
+"@glimmer/inline-precompile@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@glimmer/inline-precompile/-/inline-precompile-1.0.1.tgz#4201119a358002d4bb2b5d8fa633327239fb9336"
+  dependencies:
+    babel-plugin-glimmer-inline-precompile "^1.2.0"
 
 "@glimmer/interfaces@^0.30.3":
   version "0.30.3"
