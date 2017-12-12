@@ -7,6 +7,7 @@ const argv = require('minimist')(process.argv.slice(2));
 const GLIMMER_PACKAGES = ['runtime', 'reference', 'object-reference', 'runtime', 'util', 'compiler', 'wire-format', 'syntax'].map(pkg => `@glimmer/${pkg}`);
 
 function cmd(instructions) {
+  console.log(instructions);
   return execa.shell(`${instructions}`).then((r) => r.stdout, (r) => r.stderr);
 }
 

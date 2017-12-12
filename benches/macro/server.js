@@ -12,12 +12,17 @@ const config = JSON.parse(fs.readFileSync("./benches/macro/config.json", "utf8")
 module.exports = function startServers() {
   config.servers.forEach(server => {
     startServer(server.name, config.har, server.port, (key, text) => {
+      if (key === 'GET/') {
+        let indexFile = `./${server.dist}/index.html`;
+        console.log(`Replacing GET/ with ${indexFile}`);
+        return fs.readFileSync(indexFile, 'utf8')
+          // remove hashes from url
+          .replace(/app-[0-9a-fA-F]{32}\.(js|css)/g, 'app.$1')
+      }
 
-      if (key.includes('GET/app-')) {
-        console.log(server.dist);
-        console.log(glob(`./${server.dist}/app-*.js`));
+      if (key === 'GET/app.js') {
         let [appFile] = glob(`./${server.dist}/app-*.js`);
-        console.log(`Replacing key with ${appFile}`);
+        console.log(`Replacing GET/app.js with ${appFile}`);
         return fs.readFileSync(appFile, 'utf8');
       }
 
@@ -27,8 +32,15 @@ module.exports = function startServers() {
 }
 
 function key(method, url) {
-  if (url.pathname === '/') {
-    return method + url.pathname;
+  if (method === 'GET') {
+    if (url.pathname === '/') {
+      return 'GET/';
+    }
+    // convert hashed keys to plain.
+    let match = /app-[0-9a-fA-F]{32}\.(js|css)/.exec(url.pathname);
+    if (match) {
+      return `GET/app.${match[1]}`;
+    }
   }
   return method + url.path;
 }
@@ -36,7 +48,6 @@ function key(method, url) {
 function replaceProtocolAndDomain(text, host) {
   return text.replace(/https:\/\//g, "http://");
 }
-
 
 function startServer(name, archivePath, port, vary) {
   let host = `localhost:${port}`;
@@ -54,9 +65,9 @@ function startServer(name, archivePath, port, vary) {
   }
 
   function textFor(entry, key, text) {
-    if (entry.request.method !== "GET") return text;
+    console.log('textFor', key);
 
-    if (key === "GET/ember-cli-live-reload.js") { return ""; }
+    if (entry.request.method !== "GET") return text;
 
     text = vary(key, text);
 
@@ -66,8 +77,8 @@ function startServer(name, archivePath, port, vary) {
   let harRemix = new HARRemix({ keyForArchiveEntry, keyForServerRequest, textFor });
 
   harRemix.loadArchive(archivePath);
-  let favicon = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAGl0lEQVR4AX2W22+lVfnHv8/zrHd3t9PpYfobpMA0ZVBoEOHHKTOAEyBB4iHBC7kwMZ4Sb73Rv8A7b7zySrnXGAOJJiqGKCgHR0chBIgOBzsyHTpTZqYt7e7e+33X83x9V9pSCoOfi7WTnazPp+86vLvyzre+4B6qEChaGM5IlrJnU3WnqqgaSZDZ3cwiaCZsCaopCpI9V6miCEQE9KZRMIZDFSCZhCMiGJE9TLUVJTVAzJQsXgE8IiVtR1MUjaqYuBNoR6+qTqiIqZhCxAS5rqMeKstMqEEUhKgoKaYWKEaAoCoQDIiUpCoF7gEShIBEiAoFpklEnFGcHmga0hM9VCAQAFSAiJ1pFAEDEEKKXAmSABhQLSNJiKgZAyz5AHcWmt4gHEQioIIdtkOMoBA01eBOABBJhvGJND3DqpNSCg+AyE303ou11QgnIyAqGuGiKRgAkql4QJXYNlPMrOyBKSCqDAdVJFU6PTN6zwOjxx6orp2DCAA2dVxa6f/9ud4LT6dLK56zmoIUUMYO+OY6ADn79c8lNSdRgIqggLZhahGhJtIdS0dvnHz0252jN+GjeG7OvLX2kx/G+ro3tQrZGcmXLnLYL8JkCSKmZmoC2X7w8gRW7FaCeuDeBw9987tXtBcsVfM3jD/ytZxrbWrf7MVgwHqAArR1BcO9/cwgRSTnMBEAZpqdoyce7h57wK6axQdgv4fwDzSse+udkp1NjQjUQ+wuSUqqHtxZmTIgaeuNCtI2q0OHxu65v3PDAkSxS++pX208+YRNTI4/9MjofQ+hIHJwKgBhRGT2M3ZRAqoSUcJ0IkcMG/U69zZk2B+94147PItUYRv3/sk/bf7ucT+/5G/9q1l8wy+/i13MjB6iKkLskpCbcEcBERQ6SLC4qNJZuE3HJ7BLbPUGzz+Vz5+jNyEqlqQzggJYlmX3psQHAlEP2WQICkGCAqEAED04UV03LyNdbOPuK+8MX/0HGCDbU6szV+3kGX7hHTIXhQMRe4E8GKb333QCUhxUaKge+MxdOjEBVRTA4WDrxee91wuwGhvv3nlfdf2nsE3T9P7yR9QNgyiFPVJSy3QTFFShmjQFPanZ3LykCrswN7H4Zqimbrd7/+cPfvHRnaMV4ReXt558Itd10RD7AjnyyMxhQAIcWbi1ump28NqLeek/2X3khpul2guAjHbbb/7/8Ue+2v30Hag6KCA21lZ/+iP2eybiIPYjS18+LlOTDE5+5Rujd33WDl8dw0H9+qvthO4td8rk9N4BjYj1VRkbk1atBoB1nc+8+d4vHtt67SUDvKlBMhzcy6RyZQMq0rn+Rpu9DmraGeneejfJIhLB+6jq1KH3v6nPLg5OPjP46zPN8lKxexYIVRD798DMVCWc4YEgFIWqI7gC23ZfX+298IfmpZPN2UVfWwUCAjWVmZno97m5jpz3AiLSrgmArT//Pi+/nQ7PyvRMmpq2/7saH4KMjfV29Yb/fHl4+lVfOhPDLbJU9eDUyCcX7PA1g1dONf0e9wVAkPToP/fU8PQr1ZH5anYuzV5bzR1N18zpxPTeKjHivbWtp3+z9eJJIQXQqpKR0fYP6szf2D1+QkcP5uWzeXmJ2CNJzpnQlAD4pQt+8Xz98ikBCEx+53tjJx7eu2gQqOUL56upQ3RHMp08lOaOjh1/sHv7cXrO55es3aT9pCY3ChFBi1iianY3IIDmlVO8+8ReQDVdc+TwD35cL50RUiembGpaxsZ34qKinQDZ1Ps3Wa01tla0REClSp3Gy+Hq/+3Z7oNfGlm4Tbqj2EUOjI/cdAs+AiP75QvNv1//UKA1ZxPlNhHiZNOYSlslsPbzx9o5KHP+J2RsbvZPPduceQP7se8vHFGBiIoISIIChnuVqiClt9mcOyNmafaIpOpj7asXN379s43f/pL1EPtJjKAiAoUSEfdQBXMDtVzXXHxjc/D48M3To7cfS0fm0yeuBcDBIF9aaX8MfGW5Xjzd3uf63OI++757QEKk+HdHIhgEG7EUw0Fz7u12BbD6bvt+xsSkikbr6m34xnp70dqDF5ffjaYBeaWAKknBHiVAIchwE6OA9bDdwP7lFYKMENWIMDUAjIBpUTNwJVQALcYgCCBAgZQIUBQMkgAEksNFNACBJDURtAQID6+HdL9yAED2MlMAMky0JKGtjkR4IALunptkJmA7Oj2AKO2d/50EH0tqcrbihIgCbE0qEmRlqXE3hSIAZbEOLVUOmhrDAWmBiKnkTHwM/wUr4jS84/B+CgAAAABJRU5ErkJggg==", "base64");
-  harRemix.setResponse("GET/assets/favicon.png", harRemix.buildResponse(200, "image/png", favicon, false));
+  let favicon = Buffer.from("AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFuD+ABbg/gHWoP4RFqD96Bag/fbWoP39VqD9/Vag/fbWoP3n1qD+ERbg/gHW4P4AAAAAAAAAAAAXo77AFqD9wBahPgWWoP3jFqD9+pag/f/W4P3/1mC9/9ag/f/WoP3/1qD9/9ag/fqWoP3jFqE+BZag/cAXo77AFqD9wBahPgXWoP3q1qD9/1Xgff/Y4r3/6zB+/+AoPn/XIT3/6G4+v+Dovn/WYL3/1qD9/1ag/erWoT4F1qD9wBchPkFWoP3jFqD9/1gh/f/kKz6/3ma+P/C0fz/4+r+/4Sj+f+etvr/gaD5/1iB9/9Ygvf/WoP3/VqD94xchPkFWoP4RVqD9+lZgvf/Yon3/83a/f/V4P3/gqH5/8bU/P/j6v7/gKD5/1eB9/9xlPj/f5/5/1uE9/9ag/fpWoP4RVqD959Zgvf/bJH4/5qz+v9+nvn/1+H9/8/b/f90lvj/xdP8/+Pq/v9/n/n/k676/+nv/v+QrPr/WYL3/1qD959ag/faWYL3/3OW+P+xxfv/Z434/3WX+P+dtfr/aY74/3KV+P/F0/z/4+r+/4qn+f+pvvv/nLX6/1qD9/9ag/faWoP39VqD9/9Zgvf/WIH3/42q+v+3yfz/ZYv4/5Su+v/N2f3/gqH5/8TS/P/j6v7/g6L5/1qD9/9ag/f/WoP39VqD9/VZgvf/bZL4/46q+v+Fo/n/5Or+/8bU/P+AoPn/1d/9/9fg/f+Bofn/wtL8/+Xr/v+Dovn/WYL3/1qD9/Vag/fbWIL3/36e+f/p7v7/scX7/4il+f/j6v7/xdT8/4Gg+f/U3/3/1+H9/4Kh+f++zvz/qb/7/1uD9/9ag/fbWoP3n1qD9/9bhPf/k676/+zx/v+swPv/gqH5/+Pq/v/F0/z/gaD5/9Tf/f/Y4v3/eZr5/2CI9/9ag/f/WoP3n1qD+EVag/fpWoP3/1qD9/+Pq/r/oLj6/2iN+P+GpPn/4+r+/8bU/P+Cofn/yNX8/46q+f9Ygff/WoP36VqD+EVchPkFWoP3jFqD9/1ag/f/WYL3/2CH9/+9zvz/jKj5/36e+f/e5v3/mbL6/1+H9/9ehvf/WoP3/VqD94xchPkFWoT3AFqE+Bdag/erWoP3/VqD9/9chPf/gJ/5/2yR+P9Zgvf/b5L4/2iO+P9Zgvf/WoP3/VqD96tahPgXWoP3AF6O+wBag/cAW4T4FlqD94xag/fqWoP3/1iC9/9Zgvf/WoP3/1mC9/9Zgvf/WoP36lqD94xbhPgWWoP3AF6O+wAAAAAAAAAAAFuD+ABbg/gHWoP4RFqD959ag/fbWoP39VqD9/Vag/fbWoP3n1qD+ERbg/gHW4P4AAAAAAAAAAAA4AcAAMADAACAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAADAAwAA4AcAAA==", "base64");
+  harRemix.setResponse("GET/favicon.ico", harRemix.buildResponse(200, "image/x-icon", favicon, false));
 
   console.log(`starting ${name}`);
   let server = harRemix.createServer();
