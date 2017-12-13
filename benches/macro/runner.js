@@ -4,7 +4,9 @@ const ora = require('ora');
 const trace = require('./index');
 const startServer = require('./server');
 const argv = require('minimist')(process.argv.slice(2));
-const GLIMMER_PACKAGES = ['runtime', 'reference', 'object-reference', 'runtime', 'util', 'bundle-compiler', 'compiler', 'wire-format', 'syntax'].map(pkg => `@glimmer/${pkg}`);
+
+const YARN_CONFIG = JSON.parse(JSON.parse(require('child_process').execSync('yarn --json config current', { encoding: 'utf8' })).data);
+const GLIMMER_PACKAGES = YARN_CONFIG.linkedModules.filter((m) => m.startsWith('@glimmer/'));
 
 function cmd(instructions) {
   return execa.shell(`${instructions}`).then((r) => {
