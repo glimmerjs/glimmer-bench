@@ -56,7 +56,10 @@ function emerging() {
 
   let emergingMarketsRunner = new Runner(emergingMarkets);
 
-  return emergingMarketsRunner.run(ITERATIONS).then(produceStats).catch((err) => {
+  return emergingMarketsRunner.run(ITERATIONS).then((results) => {
+    fs.writeFileSync('results-emerging.json', JSON.stringify(results, null, 2));
+    return produceStats(results);
+  }).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });
@@ -92,7 +95,10 @@ function established() {
 
   let establishedMarketsRunner = new Runner(establishedMarkets);
 
-  return establishedMarketsRunner.run(ITERATIONS).then(produceStats).catch((err) => {
+  return establishedMarketsRunner.run(ITERATIONS).then((results) => {
+    fs.writeFileSync('results-established.json', JSON.stringify(results, null, 2));
+    return produceStats(results);
+  }).catch((err) => {
     console.error(err.stack);
     process.exit(1);
   });

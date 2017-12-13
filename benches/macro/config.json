@@ -1,6 +1,9 @@
 {
   "cpu": 4,
   "har": "./benches/macro/archive.har",
+  "additionalArguments": [
+    "--headless", "--disable-gpu", "--hide-scrollbars", "--mute-audio"
+  ],
   "runtimeStats": false,
   "network": {
     "latency": 400,
@@ -21,4 +24,3 @@
     }
   ]
 }
-

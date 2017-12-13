@@ -15,7 +15,7 @@ const observer = new PerformanceObserver(function(list, obj) {
       if (location.search === '?perf.tracing') {
         setTimeout(() => {
           document.location.href = 'about:blank';
-        }, 10);
+        }, 50);
       } else {
         performance.mark('processEnd');
         performance.measure('load', 'navigationStart', 'beforeRender');

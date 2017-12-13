@@ -2,3 +2,7 @@ node_modules
 tmp
 dist
 baseline-dist
+*.log
+*.tgz
+*.pdf
+results*.json
