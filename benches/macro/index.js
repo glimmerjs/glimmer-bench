@@ -12,7 +12,8 @@ const { mean, median, mode } = require('simple-statistics');
 const ITERATIONS = 50;
 
 let browserOpts = {
-  type: "canary"
+  type: "canary",
+  additionalArguments: [ "--headless", "--disable-gpu", "--hide-scrollbars", "--mute-audio" ],
 };
 
 const config = JSON.parse(fs.readFileSync("./benches/macro/config.json", "utf8"));
