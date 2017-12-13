@@ -7,8 +7,13 @@ const argv = require('minimist')(process.argv.slice(2));
 const GLIMMER_PACKAGES = ['runtime', 'reference', 'object-reference', 'runtime', 'util', 'compiler', 'wire-format', 'syntax'].map(pkg => `@glimmer/${pkg}`);
 
 function cmd(instructions) {
-  console.log(instructions);
-  return execa.shell(`${instructions}`).then((r) => r.stdout, (r) => r.stderr);
+  return execa.shell(`${instructions}`).then((r) => {
+      return r.stdout
+    }, (r) => {
+      console.log(r.stdout);
+      console.error(r.stderr);
+      throw new Error(`failed: ${instructions}`);
+    });
 }
 
 function mkdir(dir) {
@@ -36,7 +41,7 @@ function unlink() {
 }
 
 function yarn() {
-  return cmd(`yarn`);
+  return cmd(`yarn --check-files`);
 }
 
 function logger(message) {
@@ -75,12 +80,15 @@ async function run() {
   await moveDist('baseline-dist');
 
   if (argv.link) {
+    log(`Linking`);
     await link();
   } else {
     log(`Checking out HEAD@${HEAD}`);
 
     await git(`checkout ${HEAD}`);
   }
+
+  log(`Building experiment`);
 
   await build();
 
