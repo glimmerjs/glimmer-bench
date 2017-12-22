@@ -12,9 +12,14 @@ const { mean, median, mode } = require('simple-statistics');
 const ITERATIONS = 50;
 
 let browserOpts = {
-  type: "canary",
+  type: "system",
   additionalArguments: [ "--headless", "--disable-gpu", "--hide-scrollbars", "--mute-audio" ],
 };
+
+if (process.env.CHROME_BIN) {
+  browserOpts.type = "exact";
+  browserOpts.executablePath = process.env.CHROME_BIN;
+}
 
 const config = JSON.parse(fs.readFileSync("./benches/macro/config.json", "utf8"));
 
